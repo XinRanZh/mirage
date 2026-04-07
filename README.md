@@ -52,7 +52,7 @@ pip install mirage-mock
 Or from source:
 
 ```bash
-git clone https://github.com/xinranzhang/mirage.git
+git clone https://github.com/XinRanZh/mirage.git
 cd mirage
 pip install -e ".[dev,otel]"
 ```

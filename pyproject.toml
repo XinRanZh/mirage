@@ -51,9 +51,9 @@ dev = [
 mirage = "mirage.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/xinranzhang/mirage"
+Homepage = "https://github.com/XinRanZh/mirage"
 Paper = "https://arxiv.org/abs/2604.04806"
-Issues = "https://github.com/xinranzhang/mirage/issues"
+Issues = "https://github.com/XinRanZh/mirage/issues"
 
 [tool.setuptools.packages.find]
 include = ["mirage*"]
