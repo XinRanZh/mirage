@@ -1,0 +1,42 @@
+# MIRAGE Configuration — Order System Example
+# 4-service saga orchestration demo
+
+project:
+  name: order-system
+  codebase: services
+  traces: trace-data
+
+sut:
+  name: order-service
+  module: services.order_service.main:app
+  port: 8000
+  env:
+    INVENTORY_URL: http://localhost:9001
+    PAYMENT_URL: http://localhost:9002
+    SHIPPING_URL: http://localhost:9003
+
+dependencies:
+  inventory-service:
+    source: services/inventory_service/main.py
+    traces: trace-data/inventory-service.jsonl
+    port: 8001
+    mock_port: 9001
+
+  payment-service:
+    source: services/payment_service/main.py
+    traces: trace-data/payment-service.jsonl
+    port: 8002
+    mock_port: 9002
+
+  shipping-service:
+    source: services/shipping_service/main.py
+    traces: trace-data/shipping-service.jsonl
+    port: 8003
+    mock_port: 9003
+
+mock:
+  backend: llm
+  model: claude-sonnet-4-5-20241022    # change to your preferred model
+  temperature: 0.1
+  max_tokens: 2048
+  timeout: 120

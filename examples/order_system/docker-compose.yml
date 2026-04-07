@@ -1,0 +1,74 @@
+version: "3.8"
+
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel/config.yaml
+      - ./trace-data:/data
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+
+  inventory-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python -m uvicorn services.inventory_service.main:app --host 0.0.0.0 --port 8001
+    ports:
+      - "8001:8001"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_CONSOLE_EXPORT=false
+    depends_on:
+      - otel-collector
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python -m uvicorn services.payment_service.main:app --host 0.0.0.0 --port 8002
+    ports:
+      - "8002:8002"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_CONSOLE_EXPORT=false
+      - TOKEN_TTL_SECONDS=30
+      - TRANSIENT_FAILURE_RATE=0.3
+    depends_on:
+      - otel-collector
+
+  shipping-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python -m uvicorn services.shipping_service.main:app --host 0.0.0.0 --port 8003
+    ports:
+      - "8003:8003"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_CONSOLE_EXPORT=false
+      - SHIPPING_PROCESSING_DELAY=2.0
+      - SHIPPING_SHIPPING_DELAY=3.0
+      - SHIPPING_FAILURE_RATE=0.15
+    depends_on:
+      - otel-collector
+
+  order-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python -m uvicorn services.order_service.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_CONSOLE_EXPORT=false
+      - INVENTORY_URL=http://inventory-service:8001
+      - PAYMENT_URL=http://payment-service:8002
+      - SHIPPING_URL=http://shipping-service:8003
+    depends_on:
+      - inventory-service
+      - payment-service
+      - shipping-service
